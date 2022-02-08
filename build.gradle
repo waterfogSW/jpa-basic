@@ -12,6 +12,11 @@ repositories {
 dependencies {
     implementation 'org.hibernate:hibernate-entitymanager:5.3.10.Final'
     implementation 'com.h2database:h2:2.1.210'
+
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.1'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
