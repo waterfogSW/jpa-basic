@@ -402,3 +402,73 @@ Hibernate:
 - em.detach(entity) : 특정 엔티티 영속성 컨텍스트에서 분리
 - em.clear() : 영속성 컨텍스트 모두 초기화
 - em.close() : 영속성 컨텍스트 종료
+
+## 엔티티 매핑
+
+- 객체, 테이블 매핑
+  - @Entity, @Table
+- 필드, 컬럼 매핑
+  - @Column
+- 기본키 매핑
+  - @Id
+- 연관관계 매핑 
+  - @ManyToOne, @JoinColumn
+
+### 객체와 테이블 매핑
+
+**@Entity**
+- @Entity가 붙은 클래스는 JPA가 관리한다.
+- JPA를 사용해서 테이블과 매핑할 클래스는 @Entity를 사용하여야 한다
+- 주의점
+  - 기본 생성자 필수(public, protected 생성자)
+  - final클래스, enum, interface, inner클래스 사용X
+  - 저장할 필드에 final 사용X
+- `@Entity(name = "Member")` 
+  - JPA에서 사용할 엔티티의 이름을 지정할 수 있다.
+
+**Table**
+- 엔티티와 매핑할 테이블지정
+
+### 데이터베이스 스키마 자동 생성
+
+- DDL을 애플리케이션 실행시점에 자동 생성
+- 테이블 중심 -> 객체 중심
+- 데이터 베이스 방언을 활용하여 각 데이터 베이스에 맞는 적절한 DDL생성
+- 생성된 DDL은 개발 장비에서만 사용
+
+> DDL이란?  
+> CREATE, ALTER, DROP, TRUNCATE, GRANT, REVOKE, COMMENT 과 같은 데이터 베이스의 
+> 스키마 객체를 생성하거나 삭제 하는 등의 작업을 하는 언어
+
+persistence.xml
+```text
+...
+<property name="hibernate.hbm2ddl.auto" value="create" />
+...
+```
+
+**value 옵션**
+- create
+  - 기존테이블 삭제후 다시 생성(drop -> create)
+- create-drop
+  - create옵션과 같으나 종료시점에 drop(drop -> create -> drop)
+  - 테스트 케이스를 실행시킬때 주로 사용
+- update
+  - 변경된 부분만 적용(alter)
+- validate
+  - 엔티티와 테이블이 정상 매핑되었는지 확인
+- nono
+  - hibernate.hbm2ddl.auto 기능을 사용하지 않는다.(주석처리와 같음)
+
+**주의**
+- 운영장비에는 절대 create, create-drop, update를 사용해선 안된다.(데이터를 잃어버릴수도 있음)
+- 개발 초기 단계는 create, update
+- 테스트 서버는 update, validate
+- 스테이징과 운영서버는 validate, none
+- 가급적 여러명이 쓰는 개발서버, 스테이징 운영서버에서는 사용하지 않는다.
+
+### DDL 생성 기능
+- 제약 조건 추가
+  - @Column(nullable = false, length = 10)
+  - @Column(unique = true), : 해당 컬럼에 있어 존재하는 값이 유일해야 한다.
+- 
