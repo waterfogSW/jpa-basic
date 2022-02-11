@@ -471,4 +471,49 @@ persistence.xml
 - 제약 조건 추가
   - @Column(nullable = false, length = 10)
   - @Column(unique = true), : 해당 컬럼에 있어 존재하는 값이 유일해야 한다.
-- 
+
+
+### 필드와 컬럼 매핑
+
+#### 매핑어노테이션
+
+```java
+@Entity
+public class Member {
+    @Id
+    private Long id;
+    @Column(name = "name", insertable = true, updatable = true)
+    private String username;
+    private Integer age;
+    @Enumerated(EnumType.STRING)
+    private RoleType roleType;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastModifiedDate;
+    @Lob
+    private String description;
+
+    public Member() {
+    }
+
+}
+```
+
+@Column
+- name
+  - 컬럼 이름
+- insertable, updatable
+  - 등록, 변경 가능 여부
+- nullable
+  - null값 허용 여부
+- unique
+  - uniuqe 제약조건
+- columnDefinition
+  - 데이터베이스 커럶 정보를 직접 줄 수 있다
+- length
+  - 문자 길이 제약 조건
+- precision
+  - BigDecimal타입에서 사용, 소수점을 포함한 전체 자릿수
+- scale
+  - 소수점 자릿수
