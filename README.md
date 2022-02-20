@@ -500,7 +500,7 @@ public class Member {
 }
 ```
 
-@Column
+**@Column**
 - name
   - 컬럼 이름
 - insertable, updatable
@@ -517,3 +517,22 @@ public class Member {
   - BigDecimal타입에서 사용, 소수점을 포함한 전체 자릿수
 - scale
   - 소수점 자릿수
+
+**@Emumerated**
+- EnumType.ORDINAL(기본 설정값) : enum타입의 순서가 데이터베이스에 저장된다(사용하지 말것)
+  - enum타입을 추가할 경우 운영상에 문제가 발생할 수 있다.
+- EnumType.STRING : emum타입 이름이 문자로 데이터베이스에 저장됨
+  - 순서에 의한 문제가 없기 때문에 STRING으로 사용하는것을 권장
+
+**@Temporal**
+- 날짜 타입을 매핑할 때 사용
+- LocalDAte, LocalDateTime을 사용할 때는 생략 가능
+
+**@Lob**
+- 매핑하는 필드 타입이 문자면 CLOB
+- 나머지는 BLOB매핑
+  - CLOB : String, char[], java.sql.CLOB
+  - BLOB : byte[], java.sql.BLOB
+
+**@Transient**
+- 메모리에서만 임시로 사용
