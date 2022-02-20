@@ -510,7 +510,8 @@ public class Member {
 - unique
   - uniuqe 제약조건
 - columnDefinition
-  - 데이터베이스 커럶 정보를 직접 줄 수 있다
+  - 데이터베이스 컬럼 정보를 직접 줄 수 있다
+  - `columnDefinition = "varchar(100) default 'Empty'`
 - length
   - 문자 길이 제약 조건
 - precision
@@ -519,7 +520,7 @@ public class Member {
   - 소수점 자릿수
 
 **@Emumerated**
-- EnumType.ORDINAL(기본 설정값) : enum타입의 순서가 데이터베이스에 저장된다(사용하지 말것)
+- EnumType.ORDINAL(기본 설정값) : enum타입의 순서가 데이터베이스에 저장된다(**사용하지 말것**)
   - enum타입을 추가할 경우 운영상에 문제가 발생할 수 있다.
 - EnumType.STRING : emum타입 이름이 문자로 데이터베이스에 저장됨
   - 순서에 의한 문제가 없기 때문에 STRING으로 사용하는것을 권장
