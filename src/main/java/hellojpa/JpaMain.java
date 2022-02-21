@@ -15,6 +15,16 @@ public class JpaMain {
         tx.begin();
 
         try {
+            Member member1 = new Member();
+            member1.setUsername("san-a");
+            Member member2 = new Member();
+            member2.setUsername("san-b");
+            Member member3 = new Member();
+            member3.setUsername("san-c");
+
+            em.persist(member1);
+            em.persist(member2);
+            em.persist(member3);
 
             tx.commit();
         } catch (Exception e) {
