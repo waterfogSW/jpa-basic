@@ -1,20 +1,23 @@
 # 자바 ORM표준 JPA프로그래밍
 
 ORM
+
 - Object Relational Mapping
 - 객체와 관계형 데이터 베이스 매핑
 
 데이터 베이스 방언
+
 - JPA는 특정 데이터 베이스에 종속되지 않는다.
 - 각 데이터베이스가 제공하는 SQL문법과 함수는 조금씩 다르다.
 - 방언(dialect) : SQL표준을 지키지 않는 특정 데이터 베이스만의 고유 기능
-  - ex) org.hibernate.dialect.OracleDialect, org.,hibernate.dialectH2Database
-  
+    - ex) org.hibernate.dialect.OracleDialect, org.,hibernate.dialectH2Database
+
 ## Hello JPA 애플리케이션 개발
 
 ### 프로젝트 환경 설정(gradle)
 
 **build.gradle**
+
 ```
     implementation 'org.hibernate:hibernate-entitymanager:5.3.10.Final'
     implementation 'com.h2database:h2:2.1.210'
@@ -27,11 +30,13 @@ ORM
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 ```
 
-**h2 데이터베이스** 
+**h2 데이터베이스**
+
 - 경로 : ~/test
 - 데이터베이스 최초 생성시에는 경로에 tcp를 제거하고 접근한다.
 
 *persistence.xml*
+
 ```text
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.2"
@@ -92,31 +97,32 @@ public class JpaMain {
 
 ```java
 public class JpaMain {
-  public static void main(String[] args) {
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+    public static void main(String[] args) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
 
-    EntityManager em = emf.createEntityManager();
-    EntityTransaction tx = em.getTransaction();
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
 
-    tx.begin();
+        tx.begin();
 
-    try {
-      Member findMember = em.find(Member.class, 1L);
-      System.out.println("findMember.id = " + findMember.getId());
-      System.out.println("findMember.id = " + findMember.getId());
+        try {
+            Member findMember = em.find(Member.class, 1L);
+            System.out.println("findMember.id = " + findMember.getId());
+            System.out.println("findMember.id = " + findMember.getId());
 
-      tx.commit();
-    } catch (Exception e) {
-      tx.rollback();
-    } finally {
-      em.close();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
     }
-
-    emf.close();
-  }
 }
 
 ```
+
 ### 데이터 수정
 
 ```java
@@ -189,31 +195,34 @@ public class JpaMain {
 ## 영속성 관리
 
 ### 영속성 컨텍스트
+
 - 엔티티를 영구 저장하는 환경
-  - `EntityManager.persist(entity);`
+    - `EntityManager.persist(entity);`
 - 논리적인 개념으로 눈에 보이지 않는다.
 - 엔티티 매니저를 통해 영속성 컨텍스트에 접근한다.
 
 ### 영속성 컨텍스트의 이점
+
 - 1차 캐시
-  - 트랜잭션 마다의 별도의 캐시를 가짐
+    - 트랜잭션 마다의 별도의 캐시를 가짐
 - 동일성 보장
-  - 1차캐시에서 조회하여 동일한 객체임을 보장할 수 있음.
+    - 1차캐시에서 조회하여 동일한 객체임을 보장할 수 있음.
 - 트랜잭션을 지원하는 쓰기 지연
-  - 쓰기지연 SQL 저장소, flush
+    - 쓰기지연 SQL 저장소, flush
 - 변경 감지
-  - 스냅샷과의 비교를 통해 변경 감지
+    - 스냅샷과의 비교를 통해 변경 감지
 - 지연 로딩
 
 ### 엔티티의 생명 주기
+
 - 비영속
-  - 영속성 컨텍스트와 전혀 관계가 없는 새로운 상태
+    - 영속성 컨텍스트와 전혀 관계가 없는 새로운 상태
 - 영속
-  - 영속성 컨텍스트에 의해 관리되는 상태
+    - 영속성 컨텍스트에 의해 관리되는 상태
 - 준영속
-  - 영속성 컨텍스트에 저장되었다가 분리된 상태
+    - 영속성 컨텍스트에 저장되었다가 분리된 상태
 - 삭제
-  - 삭제된 상태 
+    - 삭제된 상태
 
 ```text
 //비영속
@@ -269,6 +278,7 @@ Member findMember2 = em.find(Member.class, 102L);
 
 System.out.println("result = " + (findMember1 == findMember2));
 ```
+
 결과 : result = true
 
 - 1차 캐시로 반복 가능한 읽기 등급의 트랜잭션 격리 수준을 데이터 베이스가 아닌 애플리케이션 차원에서 제공한다.
@@ -276,10 +286,12 @@ System.out.println("result = " + (findMember1 == findMember2));
 ### 트랜잭션을 지원하는 쓰기 지연
 
 em.persist(memberA)
+
 - 1차캐시에 memberA저장
 - 쓰기 지연 SQL저장소에 INSERT SQL을 생성하여 쌓아둔다
 
 transaction.commit();
+
 - 쓰기 지연 SQL저장소의 SQL을 DB로 flush
 
 ```text
@@ -295,8 +307,8 @@ System.out.println("============");
 tx.commit();
 ```
 
-
 결과 : 선을 그은후 쿼리가 발생하는것을 확인할 수 있음
+
 ```text
 ============
 Hibernate: 
@@ -361,10 +373,11 @@ Hibernate:
 ### flush
 
 영속성 컨텍스트의 변경 내용을 데이터 베이스에 반영
+
 - em.flush() : 직접 호출
 - 트랜잭션 커밋 : 자동 호출
 - JPQL쿼리 실행 : 자동 호출
-  - JPQL은 쿼리 생성 이전 flush를 수행후 쿼리를 생성한다.
+    - JPQL은 쿼리 생성 이전 flush를 수행후 쿼리를 생성한다.
 
 ```text
 // 비영속
@@ -378,6 +391,7 @@ tx.commit();
 ```
 
 결과 : 커밋 이전에 호출되는것을 확인할 수 있음.
+
 ```text
 Hibernate: 
     /* insert hellojpa.Member
@@ -395,10 +409,12 @@ Hibernate:
 - 트랜잭션이라는 작업단위가 중요
 
 ### 준영속 상태
+
 - 영속 상태의 엔티티가 영속성 컨텍스트에서 분리된 상태
 - 영속성 컨텍스트가 더이상 관리하지 않으므로 변경감지등의 기능이 수행되지 않음
 
 준영속 상태로 만드는 방법
+
 - em.detach(entity) : 특정 엔티티 영속성 컨텍스트에서 분리
 - em.clear() : 영속성 컨텍스트 모두 초기화
 - em.close() : 영속성 컨텍스트 종료
@@ -406,27 +422,29 @@ Hibernate:
 ## 엔티티 매핑
 
 - 객체, 테이블 매핑
-  - @Entity, @Table
+    - @Entity, @Table
 - 필드, 컬럼 매핑
-  - @Column
+    - @Column
 - 기본키 매핑
-  - @Id
-- 연관관계 매핑 
-  - @ManyToOne, @JoinColumn
+    - @Id
+- 연관관계 매핑
+    - @ManyToOne, @JoinColumn
 
 ### 객체와 테이블 매핑
 
 **@Entity**
+
 - @Entity가 붙은 클래스는 JPA가 관리한다.
 - JPA를 사용해서 테이블과 매핑할 클래스는 @Entity를 사용하여야 한다
 - 주의점
-  - 기본 생성자 필수(public, protected 생성자)
-  - final클래스, enum, interface, inner클래스 사용X
-  - 저장할 필드에 final 사용X
-- `@Entity(name = "Member")` 
-  - JPA에서 사용할 엔티티의 이름을 지정할 수 있다.
+    - 기본 생성자 필수(public, protected 생성자)
+    - final클래스, enum, interface, inner클래스 사용X
+    - 저장할 필드에 final 사용X
+- `@Entity(name = "Member")`
+    - JPA에서 사용할 엔티티의 이름을 지정할 수 있다.
 
 **Table**
+
 - 엔티티와 매핑할 테이블지정
 
 ### 데이터베이스 스키마 자동 생성
@@ -437,10 +455,11 @@ Hibernate:
 - 생성된 DDL은 개발 장비에서만 사용
 
 > DDL이란?  
-> CREATE, ALTER, DROP, TRUNCATE, GRANT, REVOKE, COMMENT 과 같은 데이터 베이스의 
+> CREATE, ALTER, DROP, TRUNCATE, GRANT, REVOKE, COMMENT 과 같은 데이터 베이스의
 > 스키마 객체를 생성하거나 삭제 하는 등의 작업을 하는 언어
 
 persistence.xml
+
 ```text
 ...
 <property name="hibernate.hbm2ddl.auto" value="create" />
@@ -448,19 +467,21 @@ persistence.xml
 ```
 
 **value 옵션**
+
 - create
-  - 기존테이블 삭제후 다시 생성(drop -> create)
+    - 기존테이블 삭제후 다시 생성(drop -> create)
 - create-drop
-  - create옵션과 같으나 종료시점에 drop(drop -> create -> drop)
-  - 테스트 케이스를 실행시킬때 주로 사용
+    - create옵션과 같으나 종료시점에 drop(drop -> create -> drop)
+    - 테스트 케이스를 실행시킬때 주로 사용
 - update
-  - 변경된 부분만 적용(alter)
+    - 변경된 부분만 적용(alter)
 - validate
-  - 엔티티와 테이블이 정상 매핑되었는지 확인
+    - 엔티티와 테이블이 정상 매핑되었는지 확인
 - nono
-  - hibernate.hbm2ddl.auto 기능을 사용하지 않는다.(주석처리와 같음)
+    - hibernate.hbm2ddl.auto 기능을 사용하지 않는다.(주석처리와 같음)
 
 **주의**
+
 - 운영장비에는 절대 create, create-drop, update를 사용해선 안된다.(데이터를 잃어버릴수도 있음)
 - 개발 초기 단계는 create, update
 - 테스트 서버는 update, validate
@@ -468,16 +489,17 @@ persistence.xml
 - 가급적 여러명이 쓰는 개발서버, 스테이징 운영서버에서는 사용하지 않는다.
 
 ### DDL 생성 기능
-- 제약 조건 추가
-  - @Column(nullable = false, length = 10)
-  - @Column(unique = true), : 해당 컬럼에 있어 존재하는 값이 유일해야 한다.
 
+- 제약 조건 추가
+    - @Column(nullable = false, length = 10)
+    - @Column(unique = true), : 해당 컬럼에 있어 존재하는 값이 유일해야 한다.
 
 ### 필드와 컬럼 매핑
 
 #### 매핑어노테이션
 
 ```java
+
 @Entity
 public class Member {
     @Id
@@ -501,58 +523,63 @@ public class Member {
 ```
 
 **@Column**
+
 - name
-  - 컬럼 이름
+    - 컬럼 이름
 - insertable, updatable
-  - 등록, 변경 가능 여부
+    - 등록, 변경 가능 여부
 - nullable
-  - null값 허용 여부
+    - null값 허용 여부
 - unique
-  - uniuqe 제약조건
+    - uniuqe 제약조건
 - columnDefinition
-  - 데이터베이스 컬럼 정보를 직접 줄 수 있다
-  - `columnDefinition = "varchar(100) default 'Empty'`
+    - 데이터베이스 컬럼 정보를 직접 줄 수 있다
+    - `columnDefinition = "varchar(100) default 'Empty'`
 - length
-  - 문자 길이 제약 조건
+    - 문자 길이 제약 조건
 - precision
-  - BigDecimal타입에서 사용, 소수점을 포함한 전체 자릿수
+    - BigDecimal타입에서 사용, 소수점을 포함한 전체 자릿수
 - scale
-  - 소수점 자릿수
+    - 소수점 자릿수
 
 **@Emumerated**
+
 - EnumType.ORDINAL(기본 설정값) : enum타입의 순서가 데이터베이스에 저장된다(**사용하지 말것**)
-  - enum타입을 추가할 경우 운영상에 문제가 발생할 수 있다.
+    - enum타입을 추가할 경우 운영상에 문제가 발생할 수 있다.
 - EnumType.STRING : emum타입 이름이 문자로 데이터베이스에 저장됨
-  - 순서에 의한 문제가 없기 때문에 STRING으로 사용하는것을 권장
+    - 순서에 의한 문제가 없기 때문에 STRING으로 사용하는것을 권장
 
 **@Temporal**
+
 - 날짜 타입을 매핑할 때 사용
 - LocalDAte, LocalDateTime을 사용할 때는 생략 가능
 
 **@Lob**
+
 - 매핑하는 필드 타입이 문자면 CLOB
 - 나머지는 BLOB매핑
-  - CLOB : String, char[], java.sql.CLOB
-  - BLOB : byte[], java.sql.BLOB
+    - CLOB : String, char[], java.sql.CLOB
+    - BLOB : byte[], java.sql.BLOB
 
 **@Transient**
+
 - 메모리에서만 임시로 사용
 
 ### 기본키 매핑
 
 - 직접 할당 : @Id
 - 자동 생성 : @GeneratedValue
-  - IDENTITY : 데이터베이스에 위임, MYSQL - autoincrement
-  - SEQUENCE : 데이터베이스 시퀀스 오브젝트 사용, oracle
-    - @SequenceGenerator
-  - TABLE : 키 생성용 테이블 사용, 모든 DB에서 사용가능
-    - @TableGenerator
-  - AUTO : 방언에 따라 자동 지정, 기본값
+    - IDENTITY : 데이터베이스에 위임, MYSQL - autoincrement
+    - SEQUENCE : 데이터베이스 시퀀스 오브젝트 사용, oracle
+        - @SequenceGenerator
+    - TABLE : 키 생성용 테이블 사용, 모든 DB에서 사용가능
+        - @TableGenerator
+    - AUTO : 방언에 따라 자동 지정, 기본값
 
-
-#### IDENTITY  전략
+#### IDENTITY 전략
 
 ```java
+
 @Entity
 public class Member {
     @Id
@@ -607,6 +634,7 @@ public class JpaMain {
 #### SEQUENCE 전략
 
 ```java
+
 @Entity
 @SequenceGenerator(
         name = "MEMBER_SEQ_GENERATOR",
@@ -634,13 +662,13 @@ Hibernate:
 ```
 
 - 데이터 베이스에 SEQUENCE 오브젝트를 생성하여 사용
-  - SEQUENCE 오브젝트는 1부터 증가
+    - SEQUENCE 오브젝트는 1부터 증가
 - `call next value for MEMBER_SEQ`쿼리를 통해 다음 시퀀스 값을 DB로 부터 가져온 후 INSERT 쿼리 호출
 - IDENTITY 방식과 달리 버퍼링이 가능
 - 성능최적화 allocationSize
-  - call next value로 인한 추가적인 네트워크 소요 -> allocationSize
-    - allocationSize : 미리 allocationSize의 개수만큼 DB에 올려놓고, 쓰는방식
-    - 동시성 이슈없이 문제 해결 가능
+    - call next value로 인한 추가적인 네트워크 소요 -> allocationSize
+        - allocationSize : 미리 allocationSize의 개수만큼 DB에 올려놓고, 쓰는방식
+        - 동시성 이슈없이 문제 해결 가능
 
 ### TABLE 전략
 
@@ -650,6 +678,7 @@ Hibernate:
 - 실무에서는 관례상 DB에서 사용하는 것들이 있기 때문에 잘 사용하지 않는다.
 
 ```java
+
 @Entity
 @TableGenerator(
         name = "MEMBER_SEQ_GENERATOR",
@@ -666,6 +695,270 @@ public class Member {
 #### 권장하는 식별자 전략
 
 - 기본키의 제약 조건
-  - null X, 변하면 안된다
+    - null X, 변하면 안된다
 - 미래까지 이 조건을 만족하는 자연키는 찾기 어렵다. -> 대리키를 사용하자
 - 권장 : Long형 + 대체키 + 키 생성전략 사용, autoincrement, sequence object사용
+
+## 연관 관계 매핑
+
+**예제**
+멤버와 팀이 다대일 관계일때,
+
+### 단방향 연관관계
+
+**객체를 테이블에 맞추어 모델링 한 경우(외래키 식별자를 직접 다룸)**
+
+```java
+
+@Entity
+public class Member {
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @Column(name = "TEAM_ID")
+    private Long teamId;
+}
+```
+
+```java
+public class JpaMain {
+    public static void main(String[] args) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+
+        try {
+            Team team = new Team();
+            team.setName("TeamA");
+            em.persist(team);
+
+            Member member = new Member();
+            member.setUsername("member1");
+            member.setTeamId(team.getId());
+            em.persist(member);
+
+            Member findMember = em.find(Member.class, member.getId());
+
+            Long findTeamId = findMember.getTeamId();
+            Team findTeam = em.find(Team.class, findTeamId);
+
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
+    }
+}
+```
+
+- 객체를 테이블에 맞추어 데이터 중심으로 모델링하면, 협력관계를 만들 수 없다.
+- 테이블은 외래키 조인을 사용하여 연관테이블을 찾는다
+- 반면, 객체는 참조를 사용해 연관된 객체를 찾는다. -> 패러다임의 차이
+
+**객체 지향 모델링**
+
+```java
+
+@Entity
+public class Member {
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @ManyToOne
+    @JoinColumn(name = "TEAM_ID")
+    private Team team;
+}
+```
+
+```java
+public class JpaMain {
+    public static void main(String[] args) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+
+        try {
+            Team team = new Team();
+            team.setName("TeamA");
+            em.persist(team);
+
+            Member member = new Member();
+            member.setUsername("member1");
+            member.setTeam(team);
+            em.persist(member);
+
+            Member findMember = em.find(Member.class, member.getId());
+
+            Team findTeam = findMember.getTeam();
+            System.out.println("findTeam = " + findTeam.getName());
+
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
+    }
+}
+```
+
+### 양방향 연관관계와 연관 관계의 주인
+
+```java
+
+@Entity
+public class Member {
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @ManyToOne
+    @JoinColumn(name = "TEAM_ID")
+    private Team team;
+}
+```
+
+```java
+
+@Entity
+public class Team {
+    @Id
+    @GeneratedValue
+    @Column(name = "TEAM_ID")
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "team")
+    private List<Member> members = new ArrayList<>();
+}
+```
+
+- 객체 연관 관계 = 2개
+    - 회원 -> 팀 연관관계 1개(단방향)
+    - 팀 -> 회원 연관관계 1개(단방향)
+- 테이블 연관 관계
+    - 회원 <-> 팀 연관관계 1개(양방향)
+- 객체의 양방향 관계는 사실 양방향 관계가 아니라 서로 다른 단방향 관계 2개이다.
+- 반면, 테이블의 양방향 관계는 외래키 하나로 두 테이블의 연관 관계를 관리(양쪽으로 조인 가능)
+
+**연관 관계의 주인**
+
+- 연관관계의 주인만이 외래 키를 관리(등록, 수정)
+  - 주인이 아닌쪽은 읽기만 가능
+- 주인은 mappedBy 속성 사용X
+  - 주인이 아니면, mappedBy 속성으로 주인을 지정
+- **외래키가 있는곳을 주인으로 정하자**
+
+### 양방향 매핑시 많이 하는 실수
+
+양방향 매핑시 연관관계의 주인에 값을 입력해야 한다.
+
+(주인에 값을 입력하지 않은 경우)
+
+```java
+public class JpaMain {
+    public static void main(String[] args) {
+        //...
+        Team team = new Team();
+        team.setName("TeamA");
+        em.persist(team);
+
+        Member member = new Member();
+        member.setName("member1");
+
+        //역방향(주인이 아닌 방향)만 연관관계 설정
+        team.getMembers().add(member);
+        em.persist(member);
+    }
+}
+```
+
+(주인에도 값을 입력한 경우)
+
+```java
+public class JpaMain {
+    public static void main(String[] args) {
+        //...
+        Team team = new Team();
+        team.setName("TeamA");
+        em.persist(team);
+
+        Member member = new Member();
+        member.setName("member1");
+
+        team.getMembers().add(member);
+        //연관관계의 주인에도 값 설정
+        member.setTeam(team);
+        em.persist(member);
+    }
+}
+```
+
+- 순수한 객체 관계를 고려하면 항상 **양쪽다** 값을 입력해야 한다.
+    - Member(주인), Team(역방향) 둘다 값을 넣어 주어야 한다.
+- 연관 관계 편의 메서드를 생성하자(둘중 하나에만 만드는것이 좋다)
+
+**Member에 만드는 경우**
+
+```java
+
+@Entity
+public class Member {
+    //...
+    public void changeTeam(Team team) {
+        this.team = team;
+        team.getMembers().add(this);
+    }
+    //...
+}
+```
+
+**Team에 만드는 경우**
+
+```java
+
+@Entity
+public class Team {
+    //...
+    public void addMember(Member member) {
+        member.setTeam(this);
+        members.add(member);
+    }
+    //...
+}
+```
+
+- 양방향 매핑시에 무한 루프를 조심하자
+  - toString(), lombok, JSON생성 라이브러리 -> stack overflow, 장애 발생
+  - Controller에서 엔티티 반환하지 말기, DTO로 변환하여 반환할것
+
+**양방향 매핑 정리**
+
+- 단방향 매핑만으로도 이미 연관관계 매핑은 완료된다.
+  - 설계시에는 단방향 매핑으로
+- 단방향 매핑을 잘하고 양방향은 필요할 때 추가해도 된다(테이블에 영향을 주지 않음)
