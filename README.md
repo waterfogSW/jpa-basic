@@ -869,9 +869,9 @@ public class Team {
 **연관 관계의 주인**
 
 - 연관관계의 주인만이 외래 키를 관리(등록, 수정)
-  - 주인이 아닌쪽은 읽기만 가능
+    - 주인이 아닌쪽은 읽기만 가능
 - 주인은 mappedBy 속성 사용X
-  - 주인이 아니면, mappedBy 속성으로 주인을 지정
+    - 주인이 아니면, mappedBy 속성으로 주인을 지정
 - **외래키가 있는곳을 주인으로 정하자**
 
 ### 양방향 매핑시 많이 하는 실수
@@ -954,11 +954,125 @@ public class Team {
 ```
 
 - 양방향 매핑시에 무한 루프를 조심하자
-  - toString(), lombok, JSON생성 라이브러리 -> stack overflow, 장애 발생
-  - Controller에서 엔티티 반환하지 말기, DTO로 변환하여 반환할것
+    - toString(), lombok, JSON생성 라이브러리 -> stack overflow, 장애 발생
+    - Controller에서 엔티티 반환하지 말기, DTO로 변환하여 반환할것
 
 **양방향 매핑 정리**
 
 - 단방향 매핑만으로도 이미 연관관계 매핑은 완료된다.
-  - 설계시에는 단방향 매핑으로
+    - 설계시에는 단방향 매핑으로
 - 단방향 매핑을 잘하고 양방향은 필요할 때 추가해도 된다(테이블에 영향을 주지 않음)
+
+## 다양한 연관관계 매핑
+
+### 연관관계 매핑시 고려사항 3가지
+
+- 다중성(1:1, 1:N, N:M)
+    - 1:N : @OneToMany
+    - N:1 : @ManyToOne
+    - 1:1 : @OneToOne
+    - N:M : @ManyToMany(실무에서 사용해서는 안됨)
+- 단방향, 양방향
+    - 테이블
+        - 외래키 하나로 양쪽 조인 가능
+        - 방향이라는 개념이 존재하지 않음
+    - 객체
+        - 참조용 필드가 있는 쪽으로만 참조 가능
+        - 한쪽만 참조하면 단방향
+        - 양쪽이 서로 참조하면 양방향
+- 연관관계의 주인
+    - 테이블은 외래키 하나로 두 테이블이 연관 관계를 맺음
+    - 반면 객체는 참조가 2군데있음. 테이블의 외래키를 관리할 곳을 지정해야 한다.
+    - 연관관계의 주인 : 외래 키를 관리하는 참조
+    - 주인의 반대편 : 외래키에 영향을 주지 않음
+
+### 다대일 (N : 1)
+
+#### 다대일 단방향
+
+```java
+
+@Entity
+public class Member {
+    //...
+    @ManyToOne
+    @JoinColumn(name = "TEAM_ID")
+    private Team team;
+    //...
+}
+```
+
+- 외래키가 있는곳에 참조를 걸면 된다.
+
+#### 다대일 양방향
+
+- Team에서도 member를 찾을 수 있도록함.
+- DB에 영향을 주지 않음
+
+```java
+
+@Entity
+public class Team {
+    //...
+    @OneToMany(mappedBy = "team")
+    private List<Member> members = new ArrayList<>();
+    //...
+}
+```
+
+- 외래키가 있는쪽이 연관관계의 주인
+- 양쪽이 서로 참조하도록 개발
+
+### 일대다 (1:N)
+
+- TEAM 을 중심으로 외래키를 관리, 연관관계의 주인이 TEAM(실무에서 권장하지 않음)
+
+#### 일대다 단방향
+
+```java
+
+@Entity
+public class Team {
+    //...
+    @OneToMany
+    @JoinColumn(name = "TEAM_ID")
+    private List<Member> members = new ArrayList<>();
+
+    //...
+}
+```
+
+```java
+
+@Entity
+public class Member {
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+//    주석처리
+//    @ManyToOne
+//    @JoinColumn(name = "TEAM_ID")
+//    private Team team;
+}
+```
+
+- 일(1)이 연관관계의 주인
+- 테이블 일대다 관계는 항상 다(N) 쪽에 외래키가 있음
+- 객체와 테이블의 차이때문에 반대편 테이블의 외래키를 관리하는 특이한 구조
+- @JoinColumn을 꼭 사용해야 한다. 그렇지 않으면 조인 테이블 방식을 사용함
+  - TEAM_MEMBER 이라는 중간 테이블을 생성하여 관리됨
+
+**단점**
+- 엔티티가 관리하는 외래키가 다른 테이블에 있음
+- 추가적인 업데이터 쿼리가 발생하여 추후 유지 보수, 추적 관리에 어려움을 겪을 수 있으므로 실무에서는 권장하지 않음
+- 객체적으로 손해를 보더라도 다대일 양방향 매핑을 사용하는것을 권장
+
+#### 일대다 양방향
+
+- 공식적으로 존재하지 않음
+
