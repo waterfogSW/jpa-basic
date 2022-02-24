@@ -1068,11 +1068,26 @@ public class Member {
   - TEAM_MEMBER 이라는 중간 테이블을 생성하여 관리됨
 
 **단점**
-- 엔티티가 관리하는 외래키가 다른 테이블에 있음
+
+- 엔티티가 관리하는 외래키가 다른 테이블에 있음 -> 추가적인 update쿼리 발생
 - 추가적인 업데이터 쿼리가 발생하여 추후 유지 보수, 추적 관리에 어려움을 겪을 수 있으므로 실무에서는 권장하지 않음
 - 객체적으로 손해를 보더라도 다대일 양방향 매핑을 사용하는것을 권장
 
 #### 일대다 양방향
 
+```java
+@Entity
+public class Member {
+    //...
+
+    @ManyToOne
+    @JoinColumn(insertable = false, updatable = false)
+    private Team team;
+    //...
+}
+```
+
 - 공식적으로 존재하지 않음
+- Member의 team은 읽기 전용 필드로 사용. 양방향 처럼 사용
+- 다대일 양방향을 사용하자
 
