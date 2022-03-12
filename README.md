@@ -231,6 +231,15 @@ public class JpaMain {
 
 ## 영속성 관리
 
+### 엔티티 매니저 팩토리, 엔티티 매니저
+
+- EntityManagerFactory를 통해 고객의 요청이 올때마다 EntityManager를 생성한다.
+  - EntityManagerFactory는 생성하는데 비용이 크기 대문에 애플리케이션 전체에서 한 번만 생성해 공유하도록 설계되어 있다.
+  - Thread-Safe O
+- EntityManager가 생성될 때 마다 하나의 영속성 컨텍스트가 생성되며, EntityManager를 통해 영속성 컨텍스트를 관리한다.
+  - 생성하는데 비용이 거의 들지 않는다
+  - Thread-Safe X
+
 ### 영속성 컨텍스트
 
 - 엔티티를 영구 저장하는 환경
@@ -299,7 +308,7 @@ Member findMember2 = em.find(Member.class, "member2");
 
 - 1차캐시는 데이터 베이스의 한 트랜젝션에서만 효과가 있다.
 
-**영속 엔티티의 동일성 보장**
+### 영속 엔티티의 동일성 보장
 
 ```text
 // 비영속
