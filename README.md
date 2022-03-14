@@ -590,7 +590,7 @@ public class Member {
     - uniuqe 제약조건
 - columnDefinition
     - 데이터베이스 컬럼 정보를 직접 줄 수 있다
-    - `columnDefinition = "varchar(100) default 'Empty'`
+    - `columnDefinition = "varchar(100) default 'Empty'"`
 - length
     - 문자 길이 제약 조건
 - precision
@@ -755,17 +755,23 @@ public class Member {
 - 미래까지 이 조건을 만족하는 자연키는 찾기 어렵다. -> 대리키를 사용하자
 - 권장 : Long형 + 대체키 + 키 생성전략 사용, autoincrement, sequence object사용
 
-## 연관 관계 매핑
+## 연관관계 매핑
+
+- 용어 이해
+  - 방향 : 단방향, 양방향
+  - 다중성 : 다대일, 일대일, 다대다
+  - 연관관계의 주인 : 객체의 양방향 연관관계는 관리하는 객체가 필요
 
 **예제**
-멤버와 팀이 다대일 관계일때,
+- 회원과 팀이 존재
+- 회원은 하나의 팀에만 소속
+- 회원과 팀은 다대일 관계
 
 ### 단방향 연관관계
 
 **객체를 테이블에 맞추어 모델링 한 경우(외래키 식별자를 직접 다룸)**
 
 ```java
-
 @Entity
 public class Member {
     @Id
@@ -910,7 +916,7 @@ public class Team {
     private String name;
 
     @OneToMany(mappedBy = "team")
-    private List<Member> members = new ArrayList<>();
+    private List<Member> members = new ArrayList<>(); // null point error를 방지하기 위한 관례
 }
 ```
 
@@ -919,8 +925,8 @@ public class Team {
     - 팀 -> 회원 연관관계 1개(단방향)
 - 테이블 연관 관계
     - 회원 <-> 팀 연관관계 1개(양방향)
-- 객체의 양방향 관계는 사실 양방향 관계가 아니라 서로 다른 단방향 관계 2개이다.
-- 반면, 테이블의 양방향 관계는 외래키 하나로 두 테이블의 연관 관계를 관리(양쪽으로 조인 가능)
+- **객체의 양방향 관계**는 사실 양방향 관계가 아니라 서로 다른 단방향 관계 2개이다.
+- 반면, **테이블의 양방향 관계**는 외래키 하나로 두 테이블의 연관 관계를 관리(양쪽으로 조인 가능)
 
 **연관 관계의 주인**
 
