@@ -1290,6 +1290,80 @@ public class Locker {
 - 관계형 DB는 정규화된 테이블 2개로 다대다 관계를 표현할 수 없다
 - 연결 테이블을 추가하여 일대다, 다대일 관계로 풀어내야한다.
 - 반면 **객체는 컬렉션을 사용해서 객체 2개로 다대다 관계 가능**
-  - @ManyToMany
-  - @JoinTable 로 연결 테이블 지정 가능
+    - @ManyToMany
+    - @JoinTable 로 연결 테이블 지정 가능
 
+```java
+
+@Entity
+public class Product {
+    //...
+    @ManyToMany(mappedBy = "products") // 양방향 연관 관계
+    private List<Member> members = new ArrayList<>();
+    //...
+}
+```
+
+```java
+
+@Entity
+public class Member {
+    //...
+    @ManyToMany
+    @JoinTable(name = "MEMBER_PRODUCT")
+    private List<Product> products = new ArrayList<>();
+    //...
+}
+```
+
+- 편리해 보이지만 실무에서 사용X
+- 연결 테이블이 단순히 연결만 하고 끝나지 않는다
+- 주문시간, 수량과 같은 데이터가 들어올 수 있다
+- 중간테이블이 숨겨져 있기 때문에 예상치 못한 쿼리 발생할 수 있음
+
+#### 다대다 한계 극복
+
+- 연결 테이블용 엔티티 추가(연결 테이블을 엔티티로 승격)
+- @ManyToMany -> @OneToMany + @ManyToOne
+
+```java
+
+@Entity
+public class MemberProduct {
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "MEMBER_ID")
+    private Member member;
+
+    @ManyToOne
+    @JoinColumn(name = "PRODUCT_ID")
+    private Product product;
+
+    private int count;
+    private int price;
+    private LocalDateTime localDateTime;
+}
+```
+
+```java
+public class Product {
+    //...
+    @OneToMany(mappedBy = "product")
+    private List<MemberProduct> memberProducts = new ArrayList<>();
+    //...
+}
+```
+
+```java
+public class Member {
+    //...
+    @OneToMany(mappedBy = "member")
+    private List<MemberProduct> memberProducts = new ArrayList<>();
+    //...
+}
+```
+
+- 기본키는 복합키 보다 대리키로 사용하기 -> 추후 유연하게 설계 변경 가능 
