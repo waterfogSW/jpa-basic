@@ -1,5 +1,11 @@
 # 자바 ORM표준 JPA프로그래밍
 
+## 이슈
+
+- 빌드 환경에 따라 클래스가 자동으로 인식되지 않는 경우가 존재
+- persistence.xml에 엔티티 클래스를 명시해 주어야한다
+- h2 데이터베이스 버전은 1.4.999를 사용할 것, 최신버전 사용시 drop table오류가 발생한다.
+
 ## JPA 소개
 
 ### SQL 중심적인 개발의 문제점
@@ -638,9 +644,12 @@ public class Member {
 
 @Entity
 public class Member {
+    //...
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
+    //...
+}
 ```
 
 ```java
@@ -702,6 +711,8 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.SEQUENCE,
             generator = "MEMBER_SEQ_GENERATOR")
     private Long id;
+    //...
+}
 ```
 
 **결과**
@@ -746,6 +757,8 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.TABLE,
             generator = "MEMBER_SEQ_GENERATOR")
     private Long id;
+    //...
+}
 ```
 
 #### 권장하는 식별자 전략
@@ -758,11 +771,12 @@ public class Member {
 ## 연관관계 매핑
 
 - 용어 이해
-  - 방향 : 단방향, 양방향
-  - 다중성 : 다대일, 일대일, 다대다
-  - 연관관계의 주인 : 객체의 양방향 연관관계는 관리하는 객체가 필요
+    - 방향 : 단방향, 양방향
+    - 다중성 : 다대일, 일대일, 다대다
+    - 연관관계의 주인 : 객체의 양방향 연관관계는 관리하는 객체가 필요
 
 **예제**
+
 - 회원과 팀이 존재
 - 회원은 하나의 팀에만 소속
 - 회원과 팀은 다대일 관계
@@ -772,6 +786,7 @@ public class Member {
 **객체를 테이블에 맞추어 모델링 한 경우(외래키 식별자를 직접 다룸)**
 
 ```java
+
 @Entity
 public class Member {
     @Id
@@ -1018,8 +1033,8 @@ public class Team {
 ```
 
 - 양방향 매핑시에 무한 루프를 조심하자
-  - toString(), lombok, JSON생성 라이브러리 -> stack overflow, 장애 발생
-  - Controller에서 엔티티 반환하지 말기, DTO로 변환하여 반환할것
+    - toString(), lombok, JSON생성 라이브러리 -> stack overflow, 장애 발생
+    - Controller에서 엔티티 반환하지 말기, DTO로 변환하여 반환할것
 
 #### 양방향 매핑 정리
 
@@ -1050,10 +1065,10 @@ public class Team {
         - 한쪽만 참조하면 단방향
         - 양쪽이 서로 참조하면 양방향
 - 연관관계의 주인
-  - 테이블은 외래키 하나로 두 테이블이 연관 관계를 맺음
-  - 반면 객체는 참조가 2군데있음. 테이블의 외래키를 관리할 곳을 지정해야 한다.
-  - 연관관계의 주인 : 외래 키를 관리하는 참조
-  - 주인의 반대편 : 외래키에 영향을 주지 않음
+    - 테이블은 외래키 하나로 두 테이블이 연관 관계를 맺음
+    - 반면 객체는 참조가 2군데있음. 테이블의 외래키를 관리할 곳을 지정해야 한다.
+    - 연관관계의 주인 : 외래 키를 관리하는 참조
+    - 주인의 반대편 : 외래키에 영향을 주지 않음
 
 ### 다대일 (N : 1)
 
@@ -1095,7 +1110,10 @@ public class Team {
 
 ### 일대다 (1:N)
 
-- TEAM 을 중심으로 외래키를 관리, 연관관계의 주인이 TEAM(실무에서 권장하지 않음)
+- 테이블의 외래키는 Member에 있지만, 객체는 TEAM을 중심으로 외래키를 관리
+- 연관관계의 주인이 TEAM(실무에서 권장하지 않음)
+    - Team객체의 members를 변경하였을때 MEMBER테이블의 TEAM_ID가 변경된다
+    - Team테이블을 수정하였는데 Member테이블이 변경되니 헷갈릴 수 있다 -> 운영의 어려움
 
 #### 일대다 단방향
 
@@ -1124,10 +1142,10 @@ public class Member {
     @Column(name = "USERNAME")
     private String username;
 
-//    주석처리
-//    @ManyToOne
-//    @JoinColumn(name = "TEAM_ID")
-//    private Team team;
+/*    주석처리
+    @ManyToOne
+    @JoinColumn(name = "TEAM_ID")
+    private Team team; */
 }
 ```
 
@@ -1135,15 +1153,29 @@ public class Member {
 - 테이블 일대다 관계는 항상 다(N) 쪽에 외래키가 있음
 - 객체와 테이블의 차이때문에 반대편 테이블의 외래키를 관리하는 특이한 구조
 - @JoinColumn을 꼭 사용해야 한다. 그렇지 않으면 조인 테이블 방식을 사용함
-    - TEAM_MEMBER 이라는 중간 테이블을 생성하여 관리됨
+    - TEAM_MEMBER 이라는 중간 테이블을 생성하여 관리됨(성능저하, 운영문제 발생 가능)
 
 **단점**
 
 - 엔티티가 관리하는 외래키가 다른 테이블에 있음 -> 추가적인 update쿼리 발생
 - 추가적인 업데이터 쿼리가 발생하여 추후 유지 보수, 추적 관리에 어려움을 겪을 수 있으므로 실무에서는 권장하지 않음
 - 객체적으로 손해를 보더라도 다대일 양방향 매핑을 사용하는것을 권장
+    - (외래키를 가진쪽이 연관관계의 주인이 되도록)
 
 #### 일대다 양방향
+
+```java
+
+@Entity
+public class Team {
+    //...
+    @OneToMany
+    @JoinColumn(name = "TEAM_ID")
+    private List<Member> members = new ArrayList<>();
+
+    //...
+}
+```
 
 ```java
 
@@ -1152,13 +1184,112 @@ public class Member {
     //...
 
     @ManyToOne
-    @JoinColumn(insertable = false, updatable = false)
+    @JoinColumn(name = "TEAM_ID", insertable = false, updatable = false)
     private Team team;
     //...
 }
 ```
 
 - 공식적으로 존재하지 않음
+- Team의 members가 연관관계의 주인
 - Member의 team은 읽기 전용 필드로 사용. 양방향 처럼 사용
-- 다대일 양방향을 사용하자
+- 매핑과 설계는 단순해야함 -> 다대일 양방향을 사용하자
+
+### 일대일 (1 : 1)
+
+- 일대일 관계는 그 반대도 일대일
+- 주 테이블이나 대상 테이블 중에 외래키 선택 가능
+    - 주 테이블(Member)에 외래키
+    - 대상 테이블(Locker)에 외래키
+- 외래키에 데이터베이스 unique 제약조건
+
+#### 일대일 단방향 관계 (Member -> Locker) : 주테이블 외래키
+
+```java
+
+@Entity
+public class Member {
+    //...
+    @OneToOne
+    @JoinColumn(name = "LOCKER_ID")
+    private Locker locker;
+    //...
+}
+```
+
+```java
+
+@Entity
+public class Locker {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+}
+```
+
+#### 일대일 양방향 관계 (Member <-> Locker) : 주테이블 외래키
+
+```java
+
+@Entity
+public class Member {
+    //...
+    @OneToOne
+    @JoinColumn(name = "LOCKER_ID")
+    private Locker locker;
+    //..
+}
+```
+
+```java
+
+@Entity
+public class Locker {
+    //...
+    @OneToOne
+    @JoinColumn(mapppedBy = "locker")
+    private Member member; // -> 읽기 전용이 된다
+}
+```
+
+- 다대일 양방향과 같이 외래키가 있는곳이 연관관계의 주인
+- 반대편은 mappedBy적용
+
+#### 일대일 단방향 관계 (Member <-> Locker) : 대상 테이블 외래키
+
+- 단방향 관계는 JPA 지원 X
+- 양방향 관계만 지원
+
+#### 일대일 양방향 관계 (Member <-> Locker) : 대상 테이블 외래키
+
+- 일대일 주테이블 양방향과 매핑방법이 같다.
+
+#### Member에 외래키 vs Locker에 외래키
+
+- 비즈니스 로직에 Locker유무에 따른 조건문이 있고, Member select가 잦으면 Member에 외래키가 있는것이 유리
+
+#### 일대일 정리
+
+- 주 테이블에 외래키
+    - 주 객체가 대상 객체의 참조를 가지는것 처럼, 주 테이블에 외래키를 두고 대상 테이블을 찾음
+    - 객체 지향 개발자 선호
+    - JPA 매핑 편리
+    - 장점 : 주테이블만 조회해도 대상 테이블에 데이터가 있는지 확인 가능
+    - 단점 : 값이 없으면 외래키에 null 허용
+- 대상테이블에 외래 키
+    - 대상 테이블에 외래키가 존재
+    - 전통적인 DBA 선호
+    - 장점 : 주 테이블과 대상 테이블 일대일에서 일대다 관계로 변경시 테이블 구조 유지
+        - 추후 Member가 여러 Locker를 가질 수 있도록 설계를 변경할 수도 있다.
+    - 단점 : 프록시 기능의 한계로 지연 로딩으로 설정해도 항상 즉시로딩됨
+        - Member의 Locker유무를 확인하기 위해서, 항상 Locker를 조회해야함
+
+### 다대다 (N : M)
+
+- 관계형 DB는 정규화된 테이블 2개로 다대다 관계를 표현할 수 없다
+- 연결 테이블을 추가하여 일대다, 다대일 관계로 풀어내야한다.
+- 반면 **객체는 컬렉션을 사용해서 객체 2개로 다대다 관계 가능**
+  - @ManyToMany
+  - @JoinTable 로 연결 테이블 지정 가능
 
