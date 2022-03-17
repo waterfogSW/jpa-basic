@@ -1366,4 +1366,187 @@ public class Member {
 }
 ```
 
-- 기본키는 복합키 보다 대리키로 사용하기 -> 추후 유연하게 설계 변경 가능 
+- 기본키는 복합키 보다 대리키로 사용하기 -> 추후 유연하게 설계 변경 가능
+
+## 고급 매핑
+
+### 상속관계 매핑
+
+- 관계형 데이터 베이스는 상속관계 X
+- 슈퍼타입 서브 타입 관계라는 모델링 기법이 객체 상속과 유사
+- 상속관계 매핑 : 객체의 상속 구조와, DB의 슈퍼타입 서브타입 관계를 매핑
+
+### 상속관계 매핑 전략
+
+- 조인 전략
+    - 각각 테이블로 변환
+    - 상위 테이블에 하위테이블을 구분하는 컬럼을 두어 해당 컬럼을 기준으로 어떤 테이블을 조인할 지 결정
+- 단일 테이블 전략
+    - 통합 테이블로 변환
+    - 하위 테이블의 모든 컬럼을 한 테이블에 모두 포함시키기
+- 구현 클래스마다 테이블
+    - 서브타입 테이블로 변환
+    - 테이블을 구현클래스마다 각각 따로 두기
+
+**단순하고 확장가능성이 없는경우에 단일 테이블 전략을 사용하며, 비즈니스 적으로 중요하고 복잡할 경우 조인 전략을 사용.**
+
+### 주요 어노테이션
+
+- @Inheritance(strategy = InheritanceType.XXX
+
+#### JOINED : 조인 전략
+
+```java
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn
+// DTYPE 컬럼을 상위테이블에 생성하여 하위 테이블의 타입을 명시
+// 운영을 생각할 때  어노테이션을 생성해 주는것이 좋음
+public class Item {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+    private int price;
+}
+```
+
+```java
+
+@Entity
+//@DiscriminatorValue("A") -> 엔티티의 DTYPE을 수정할 수 있음(강사님은 축약하는것을 선호하지 않음)
+public class Album extends Item {
+    private String artist;
+}
+
+```
+
+```java
+
+@Entity
+public class Movie extends Item {
+    private String director;
+    private String actor;
+}
+```
+
+```java
+
+@Entity
+public class Book extends Item {
+    private String author;
+    private String isbn;
+}
+```
+
+- 하위 테이블의 필드에 상위 테이블의 ID를 저장하는 필드를 생성하여 조인
+
+**장점**
+- 가장 보편적으로 사용
+- 데이터가 잘 정규화 되어있다.
+- 외래키 참조 무결성 제약조건 활용가능
+  - 외부 테이블 입장에서 Item만 확인하면 된다.
+- 저장공간 효율화
+
+**단점**
+- 조회시 조인이 많이 사용되는편, 성능 저하
+- 조회 쿼리가 복잡
+- 데이터 저장시 INSERT SQL 2번 호출(큰 성능 저하 요인은 아니라 본다)
+- 단일 테이블 전략에 비해 성능이 안나올 가능성
+
+#### SINGLE_TABLE : 단일 테이블 전략
+
+```java
+
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+//@DiscriminatorColumn
+public class Item {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+    private int price;
+}
+```
+
+- 단일 테이블 전략에서는 `@DiscriminatorColumn`어노테이션이 없어도 DTYPE이 필수로 생성된다.
+- JPA스펙에는 조인 전략에서도 DTYPE생성을 명시하고 있으나, 강사님이 생각하시기에는 hibernate 가 제한하는것으로 보인다 라고 하심
+- 조인전략으로 개발후 단일 테이블로 변경하더라도 기존 JpaMain의 소스코드가 정상적으로 동작한다.(쿼리 수정 불필요)
+    - Jpa의 장점으로 볼 수 있음.
+
+
+**장점**
+- 조인이 필요 없으므로 일반적으로 조회 성능이 빠름
+- 조회 쿼리가 단순함
+
+**단점**
+- 자식 엔티티가 매핑한 컬럼은 모두 NULL 허용
+- 단일 테이블에 모든것을 저장하므로 테이블이 커질 수 있고, 상황에 따라 조회 성능이 오히려 느려질 수 있다
+
+#### TABLE_PER_CLASS : 구현 클래스마다의 테이블 전략
+
+- Item클래스를 없애고, 하위 클래스로 모든 필드를 옮김
+
+```java
+
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+//@DiscriminatorColumn -> 불필요
+public abstract class Item {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String name;
+    private int price;
+}
+```
+
+- 단순히 값 삽입, 삭제할때는 좋아 보이나 부모클래스로 값을 조회시 모든 데이터를 조회 해야 하므로 복잡한 쿼리가 발생
+
+```java
+public class JpaMain {
+    public static void main(String[] args) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        try {
+            Movie movie = new Movie();
+            movie.setDirector("san kim");
+            movie.setActor("bbbb");
+            movie.setName("바람과 함께 사라지다");
+            movie.setPrice(10000);
+            em.persist(movie);
+
+            em.flush();
+            em.clear();
+
+            Item item = em.find(Item.class, movie.getId());
+            System.out.println("item = " + item);
+
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+        } finally {
+            em.close();
+        }
+
+        emf.close();
+    }
+}
+```
+
+- 이 전략은 DBA와 ORM설계자 둘다 추천하지 않는 전략
+
+**장점**
+- 서브타입을 명확하게 구분해서 사용할때 효과적
+- not null 제약조건 사용 가능
+
+**단점**
+- 여러 자식테이블을 함께 조회할 때 성능이 느려짐(UNION SQL)
+- 자식 테이블을 통합해서 쿼리하기 어렵움
+- 추후 유지보수가 어려움
